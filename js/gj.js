@@ -11,7 +11,7 @@ function co_sj() {
     }
 }
 var data_gj = [
-{ "title": "免费应用", "image": "static/images/AppStore.jpg", "rq": "暂未更新", "details": "经常更新一些免费旧版应用和绝版应用", "url": "gj.html" },
+{ "title": "免费应用", "image": "https://cdn.jsdelivr.net/gh/amaow/static@1/images/AppStore.jpg", "rq": "暂未更新", "details": "经常更新一些免费旧版应用和绝版应用", "url": "gj.html" },
 
 
 
