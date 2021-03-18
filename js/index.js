@@ -33,7 +33,7 @@ function kap_cj(data){
         var arr = data[i]
         txt1 = txt1 + `<div class="col-md-4" onclick="window.open('${arr.url}')">
         <div class="kap s${color}">
-            <img src="{arr.image}">
+            <img src="${arr.image}">
             <div class="title">
                 <h4>${arr.title}</h4>
                 <p class="ri">${arr.rq}</p>
