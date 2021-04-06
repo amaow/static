@@ -11,9 +11,9 @@ function co_sj() {
     }
 }
 var data_jc = [
-{ "title": "微信支付", "image": "https://is2-ssl.mzstatic.com/image/thumb/Purple124/v4/a7/32/8c/a7328c6d-247e-578e-64fb-666ba3990947/source/100x100bb.jpg", "rq": "与店主确定好价格在支付 ",  "url": "../zf/vx.html" },
+{ "title": "微信支付", "image": "https://is2-ssl.mzstatic.com/image/thumb/Purple124/v4/a7/32/8c/a7328c6d-247e-578e-64fb-666ba3990947/source/100x100bb.jpg", "rq": " ",  "details": "与店主确定好价格在支付", "url": "../zf/vx.html" },
 
- { "title": "支付宝支付", "image": "https://is1-ssl.mzstatic.com/image/thumb/Purple124/v4/e6/fe/62/e6fe62f2-b322-feae-5a3a-1221de7a3ad9/source/100x100bb.jpg", "rq": "与店主确定好价格在支付",  "url": "../zf/zfb.html" },
+ { "title": "支付宝支付", "image": "https://is1-ssl.mzstatic.com/image/thumb/Purple124/v4/e6/fe/62/e6fe62f2-b322-feae-5a3a-1221de7a3ad9/source/100x100bb.jpg", "rq": "",  "details": "与店主确定好价格在支付", "url": "../zf/zfb.html" },
 
  
 
