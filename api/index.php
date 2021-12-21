@@ -1,223 +1,135 @@
 <?php
-header('Access-Control-Allow-Origin:*');
-header('Content-Type:application/json; charset=utf-8');
-//默认UA
-$UserAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.121 Safari/537.36';
-$url = isset($_GET['url']) ? $_GET['url'] : "";
-$pwd = isset($_GET['pwd']) ? $_GET['pwd'] : "";
-$type = isset($_GET['type']) ? $_GET['type'] : "";
-if (empty($url)) {
-    die(
-    json_encode(
-        array(
-            'code' => 400,
-            'msg' => '请输入URL'
-        )
-        , JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
-    );
-}
-$softInfo = MloocCurlGet($url,$UserAgent);
-if (strstr($softInfo, "文件取消分享了") != false) {
-    die(
-    json_encode(
-        array(
-            'code' => 400,
-            'msg' => '文件取消分享了'
-        )
-        , JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
-    );
-}
-preg_match('~class="b">(.*?)<\/div>~', $softInfo, $softName);
-if(!isset($softName[1])){
-	preg_match('~<div class="n_box_fn".*?>(.*?)</div>~', $softInfo, $softName);
-}
-preg_match('~<div class="n_box_des".*?>(.*?)</div>~', $softInfo, $softDesc);
-if(!isset($softName[1])){
-	preg_match('~var filename = \'(.*?)\';~', $softInfo, $softName);
-}
-if (strstr($softInfo, "手机Safari可在线安装") != false) {
-  	if(strstr($softInfo, "n_file_infos") != false){
-      	$ipaInfo = MloocCurlGet($url, 'Mozilla/5.0 (iPhone; CPU iPhone OS 10_3_1 like Mac OS X) AppleWebKit/603.1.30 (KHTML, like Gecko) Version/10.0 Mobile/14E304 Safari/602.1');
-    	preg_match('~href="(.*?)" target="_blank" class="appa"~', $ipaInfo, $ipaDownUrl);
-    }else{
-    	preg_match('~com/(\w+)~', $url, $lanzouId);
-        if (!isset($lanzouId[1])) {
-            die(
-            json_encode(
-                array(
-                    'code' => 400,
-                    'msg' => '解析失败，获取不到文件ID'
-                )
-                , JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
-            );
-        }
-        $lanzouId = $lanzouId[1];
-        $ipaInfo = MloocCurlGet("https://www.lanzous.com/tp/" . $lanzouId, 'Mozilla/5.0 (iPhone; CPU iPhone OS 10_3_1 like Mac OS X) AppleWebKit/603.1.30 (KHTML, like Gecko) Version/10.0 Mobile/14E304 Safari/602.1');
-        preg_match('~href="(.*?)" id="plist"~', $ipaInfo, $ipaDownUrl);
-    }
-    
-    $ipaDownUrl = isset($ipaDownUrl[1]) ? $ipaDownUrl[1] : "";
-    if ($type != "down") {
-        die(
-        json_encode(
-            array(
-                'code' => 200,
-                'msg' => '',
-                'name' => isset($softName[1]) ? $softName[1] : "",
-                'downUrl' => $ipaDownUrl
-            )
-            , JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
-        );
-    } else {
-        header("Location:$ipaDownUrl");
-        die;
-    }
+/**
+* install.php
+* PLIST文件生成器，用于iOS渠道包一键安装。
+* Created by pcjbird on 2015-05-28
+* Copyright (c) 2015年 Zero Status. All rights reserved.
+*/
+
+//判断是否为字典数组（dict）
+function isDict($array)
+{
+ return (is_array($array) && 0 !== count(array_diff_key($array, array_keys(array_keys($array)))));
+
 }
 
-if(strstr($softInfo, "function down_p(){") != false){
-	if(empty($pwd)){
-		die(
-		json_encode(
-			array(
-				'code' => 400,
-				'msg' => '请输入分享密码'
-			)
-			, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
-		);
-	}
-	preg_match("~'action=(.*?)&sign=(.*?)&p='\+(.*?),~", $softInfo, $segment);
-	$post_data = array(
-		"action" => $segment[1],
-		"sign" => $segment[2],
-		"p" => $pwd
-	);
-	$softInfo = MloocCurlPost($post_data, "https://www.lanzous.com/ajaxm.php", $url,$UserAgent);
-}else{
-	preg_match("~\n<iframe.*?name=\"[\s\S]*?\"\ssrc=\"\/(.*?)\"~", $softInfo, $link);
-	$ifurl = "https://www.lanzous.com/" . $link[1];
-	$softInfo = MloocCurlGet($ifurl,$UserAgent);
-	preg_match_all("~\{ 'action':'(.*?)','sign':'(.*?)','ves':(.*?) \}~", $softInfo, $segment);
-	$post_data = array(
-		"action" => $segment[1][1],
-		"sign" => $segment[2][1],
-		"ves" => $segment[3][1],
-	);
-	$softInfo = MloocCurlPost($post_data, "https://www.lanzous.com/ajaxm.php", $ifurl,$UserAgent);
-}
-$softInfo = json_decode($softInfo, true);
-if ($softInfo['zt'] != 1) {
-    die(
-    json_encode(
-        array(
-            'code' => 400,
-            'msg' => $softInfo['inf']
-        )
-        , JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
-    );
-}
-$downUrl1 = $softInfo['dom'] . '/file/' . $softInfo['url'];
-//解析最终直链地址
-$downUrl2 = MloocCurlHead($downUrl1,"http://developer.store.pujirc.com",$UserAgent,"down_ip=1; expires=Sat, 16-Nov-2019 11:42:54 GMT; path=/; domain=.baidupan.com");
-if($downUrl2 == ""){
-	$downUrl = $downUrl1;
-}else{
-	$downUrl = $downUrl2;
-}
-if ($type != "down") {
-    die(
-    json_encode(
-        array(
-            'code' => 200,
-            'msg' => '',
-            'name' => isset($softName[1]) ? $softName[1] : "",
-			'desc' => isset($softDesc[1]) ? $softDesc[1] : "",
-            'downUrl' => $downUrl
-        )
-        , JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
-    );
-} else {
-    header("Location:$downUrl");
-    die;
-}
-function MloocCurlGetDownUrl($url)
+//向xml节点中写入字典数组（dict）
+function xmlWriteDict(XMLWriter $x, &$dict) 
 {
-    $header = get_headers($url,1);
-    if(isset($header['Location'])){
-		return $header['Location'];
-	}
-	return "";
+ $x->startElement('dict');
+ foreach($dict as $k => &$v) 
+ {
+ $x->writeElement('key', $k);
+ xmlWriteValue($x, $v);
+ }
+ $x->endElement();
 }
-function MloocCurlGet($url, $UserAgent)
+ 
+ //向xml节点中写入数组（array）
+function xmlWriteArray(XMLWriter $x, &$arr) 
 {
-    $curl = curl_init();
-    curl_setopt($curl, CURLOPT_URL, $url);
-    curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
-    if ($UserAgent != "") {
-        curl_setopt($curl, CURLOPT_USERAGENT, $UserAgent);
-    }
-    curl_setopt($curl, CURLOPT_HTTPHEADER, array('X-FORWARDED-FOR:'.Rand_IP(), 'CLIENT-IP:'.Rand_IP()));
-    #关闭SSL
-    curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-    curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
-    #返回数据不直接显示
-    curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-    $response = curl_exec($curl);
-    curl_close($curl);
-    return $response;
+ $x->startElement('array');
+ foreach($arr as &$v)
+ xmlWriteValue($x, $v);
+ $x->endElement();
 }
-function MloocCurlPost($post_data, $url, $ifurl = '', $UserAgent)
+
+//根据类型向xml节点中写入值
+function xmlWriteValue(XMLWriter $x, &$v) 
 {
-    $curl = curl_init();
-    curl_setopt($curl, CURLOPT_URL, $url);
-    curl_setopt($curl, CURLOPT_USERAGENT, $UserAgent);
-    if ($ifurl != '') {
-        curl_setopt($curl, CURLOPT_REFERER, $ifurl);
-    }
-    curl_setopt($curl, CURLOPT_HTTPHEADER, array('X-FORWARDED-FOR:'.Rand_IP(), 'CLIENT-IP:'.Rand_IP()));
-    #关闭SSL
-    curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-    curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
-    #返回数据不直接显示
-    curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-    curl_setopt($curl, CURLOPT_POST, 1);
-    curl_setopt($curl, CURLOPT_POSTFIELDS, $post_data);
-    $response = curl_exec($curl);
-    curl_close($curl);
-    return $response;
+ if (is_int($v) || is_long($v))
+ $x->writeElement('integer', $v);
+ elseif (is_float($v) || is_real($v) || is_double($v))
+ $x->writeElement('real', $v);
+ elseif (is_string($v))
+ $x->writeElement('string', $v);
+ elseif (is_bool($v))
+ $x->writeElement($v?'true':'false');
+ elseif (isDict($v))
+ xmlWriteDict($x, $v);
+ elseif (is_array($v))
+ xmlWriteArray($x, $v);
+ else 
+ {
+ trigger_error("Unsupported data type in plist ($v)", E_USER_WARNING);
+ $x->writeElement('string', $v);
+ }
 }
-//直链解析函数
-function MloocCurlHead($url,$guise,$UserAgent,$cookie){
-$headers = array(
-	'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-	'Accept-Encoding: gzip, deflate',
-	'Accept-Language: zh-CN,zh;q=0.9',
-	'Cache-Control: no-cache',
-	'Connection: keep-alive',
-	'Pragma: no-cache',
-	'Upgrade-Insecure-Requests: 1',
-	'User-Agent: '.$UserAgent
-);
-$curl = curl_init();
-curl_setopt($curl, CURLOPT_URL, $url);
-curl_setopt($curl, CURLOPT_HTTPHEADER,$headers);
-curl_setopt($curl, CURLOPT_REFERER, $guise);
-curl_setopt($curl, CURLOPT_COOKIE , $cookie);
-curl_setopt($curl, CURLOPT_USERAGENT, $UserAgent);
-curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-curl_setopt($curl, CURLINFO_HEADER_OUT, TRUE);
-curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-$data = curl_exec($curl);
-$url=curl_getinfo($curl);
-curl_close($curl);
-return $url["redirect_url"];
+
+//创建plist
+function createplist()
+{
+ $ssl_server = 'https://www.lessney.com/';
+ $target_name = 'Sample';
+ $bundle_identifier = 'com.lessney.' . $target_name;
+ $subtitle = 'Zero Status Inc.';
+ $title = '示例程序';
+ $versionname = $_GET['v'];
+ if (!$versionname) 
+ {
+ $versionname = '1.0.0';
+ }
+ $versioncode = str_replace('.', '', $versionname);
+ $channelid = $_GET['cid'];
+ if (!$channelid) 
+ {
+ $channelid = '0';
+ }
+
+ header('Content-Type: application/xml');
+ $plist = new XmlWriter();
+ $plist->openMemory();
+ $plist->setIndent(TRUE);
+ $plist->startDocument('1.0', 'UTF-8');
+ $plist->writeDTD('plist', '-//Apple//DTD PLIST 1.0//EN', 'http://www.apple.com/DTDs/PropertyList-1.0.dtd');
+ $plist->startElement('plist');
+ $plist->writeAttribute('version', '1.0');
+
+ $pkg = array();
+ $pkg['kind'] = 'software-package';
+ $pkg['url'] = $ssl_server . $target_name .'_v' . $versioncode . '_' .$channelid . '.ipa';
+
+ $displayimage = array();
+ $displayimage['kind'] = 'display-image';
+ $displayimage['needs-shine'] = TRUE;
+ $displayimage['url'] = $ssl_server . 'Icon.png';
+
+ $fullsizeimage = array();
+ $fullsizeimage['kind'] = 'full-size-image';
+ $fullsizeimage['needs-shine'] = TRUE;
+ $fullsizeimage['url'] = $ssl_server . 'iTunesArtwork.png';
+
+ $assets = array();
+ $assets[] = $pkg;
+ $assets[] = $displayimage;
+ $assets[] = $fullsizeimage;
+
+ $metadata = array();
+ $metadata['bundle-identifier'] = $bundle_identifier;
+ $metadata['bundle-version'] = $versionname;
+ $metadata['kind'] = 'software';
+ $metadata['subtitle'] = $subtitle;
+ $metadata['title'] = $title;
+
+ $items0 = array();
+ $items0['assets'] = $assets;
+ $items0['metadata'] = $metadata;
+
+ $items = array();
+ $items[] = $items0;
+
+ $root = array();
+ $root['items'] = $items;
+
+ xmlWriteValue($plist, $root);
+
+ $plist->endElement();
+ $plist->endDocument();
+
+ return $plist->outputMemory();
 }
-function Rand_IP(){
-    $ip2id = round(rand(600000, 2550000) / 10000);
-    $ip3id = round(rand(600000, 2550000) / 10000);
-    $ip4id = round(rand(600000, 2550000) / 10000);
-    $arr_1 = array("218","218","66","66","218","218","60","60","202","204","66","66","66","59","61","60","222","221","66","59","60","60","66","218","218","62","63","64","66","66","122","211");
-    $randarr= mt_rand(0,count($arr_1)-1);
-    $ip1id = $arr_1[$randarr];
-    return $ip1id.".".$ip2id.".".$ip3id.".".$ip4id;
-}
+
+//输出plist
+echo createplist();
+
 ?>
