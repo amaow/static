@@ -51,7 +51,7 @@ if (!cid)
  cid = mainChannelId;
 }
 
-doLocation('itms-services://?action=download-manifest&url=' + encodeURIComponent(sslServer + './api/install.php?v=' + curVersionName + '&cid=' + cid));
+doLocation('itms-services://?action=download-manifest&url=' + encodeURIComponent(sslServer + './api/index.php?v=' + curVersionName + '&cid=' + cid));
 
 
 </script>

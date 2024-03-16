@@ -63,7 +63,7 @@ function createplist()
  $target_name = 'Sample';
  $bundle_identifier = 'com.lessney.' . $target_name;
  $subtitle = 'Zero Status Inc.';
- $title = '定制旧版';
+ $title = '示例程序';
  $versionname = $_GET['v'];
  if (!$versionname) 
  {
