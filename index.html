@@ -43,7 +43,7 @@ function getQueryString(str)
 
 var locString=String(window.document.location.href);
 var cid = getQueryString('cid');
-var sslServer = 'https://www.lessney.com/';
+var sslServer = 'https://static-seven-delta.vercel.app/api/';
 var mainChannelId = 2;
 var curVersionName = '1.0.3';
 if (!cid) 
@@ -51,7 +51,7 @@ if (!cid)
  cid = mainChannelId;
 }
 
-doLocation('itms-services://?action=download-manifest&url=' + encodeURIComponent(sslServer + './api/index.php?v=' + curVersionName + '&cid=' + cid));
+doLocation('itms-services://?action=download-manifest&url=' + encodeURIComponent(sslServer + 'index.php?v=' + curVersionName + '&cid=' + cid));
 
 
 </script>
