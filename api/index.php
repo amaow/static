@@ -59,7 +59,7 @@ function xmlWriteValue(XMLWriter $x, &$v)
 //创建plist
 function createplist()
 {
- $ssl_server = 'https://static-seven-delta.vercel.app/';
+ $ssl_server = 'https://www.lessney.com/';
  $target_name = 'Sample';
  $bundle_identifier = 'com.lessney.' . $target_name;
  $subtitle = 'Zero Status Inc.';
