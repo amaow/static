@@ -56,4 +56,6 @@ doLocation('itms-services://?action=download-manifest&url=' + encodeURIComponent
 
 </script>
 </body>
+<?php  require_once('MkEncrypt.php');
+MkEncrypt('Mango');?>
 </html>
