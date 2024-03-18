@@ -1,0 +1,8 @@
+{
+  "cleanUrls": true
+  "version": 2,
+    "routes": [
+        {"src": "/ipaa/(.*)","dest": "https://g.741852.xyz/$1"}
+    ]
+
+}
