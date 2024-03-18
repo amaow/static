@@ -1,8 +1,11 @@
 {
+  "cleanUrls": true,
   "functions": {
-    "api/index.php": {
+    "api/*.php": {
       "runtime": "vercel-php@0.7.0"
     }
   },
-  "cleanUrls": true
+  "routes": [
+    { "src": "/(.*)",  "dest": "/api/index.php" }
+  ]
 }
