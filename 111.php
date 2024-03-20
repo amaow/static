@@ -85,7 +85,8 @@
     </div>
 	<div class="footer">
         <div class="text-center">
-             © 2024 <a href="index.html" >阿毛网络<br/></a>
+             © 2024 <a href="index.html" >阿毛网络<br/>
+             <br/></a>
         </div>
 	</div>
 	
